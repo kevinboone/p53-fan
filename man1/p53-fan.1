@@ -1,0 +1,144 @@
+.TH P53-FAN "1" "September 2025" "p53-fan 0.1a" "p53-fan"
+.SH NAME
+p53-fan \- A zero-configuration fan control program for Lenovo P53 and similar
+.SH SYNOPSIS
+.SY p53-fan
+.OP \-dfhv
+.OP \-c \fR[\fICURVE\fR]\fI
+.OP \-i \fR[\fIINTERVAL\fR]\fI
+.OP \-l \fR[\fILOGLEVEL\fR]\fI
+.OP ... 
+.YS
+
+\fBWARNING\fR: Careless tinkering with a computer's cooling behaviour can damage it.
+Be sure to monitor temperatures careful when starting to use this program, to ensure
+that it suits your needs.
+
+
+.SH DESCRIPTION
+
+p53-fan adjusts the fan speed according to temperature readings from various
+sensors, based on a user-selectable fan curve. It works on Lenovo P53 and
+similar Thinkpad laptops, and perhaps others.
+
+It requires the hwmon subsystem and drivers for temperature monitoring, and
+\fI/proc/acpi/ibm/fan\fR for fan control. These are part of most modern
+Linux kernels.
+
+p53-fan is opinionated: it offers almost no configuration beyond setting the
+fan response curve. It attempts to behave reasonably even if it's not given any
+configuration settings at all, and all the configuration it does understand,
+it gets from its command line.
+
+p53-fan uses as its temperature metrics the CPU core
+temperatures, the CPU and GPU (if installed) aggregate temperatures, NVME drive
+(if installed) composite temperature, and the wifi adapter temperature. If
+there are multiple NVME drives, all will be polled. With the `drivetemp`
+module loaded, it wall also include the temperatures of SATA drives (but
+see further discussion on this point below).
+
+p53-fan sets out to be an (almost) zero-configuration alternative to 'thinkfan',
+that will work on a small range of Lenovo laptop computers. p53-fan uses only
+1Mb of RAM, and creates essentially no CPU load of its own.
+
+Non-default fan control isn't a necessity -- the kernel and hardware should
+collaborate to maintain adequate cooling. However, the default fan curve on the
+Thinkpads favours quietness over coolness, which results in relatively
+warm running. That should be safe, but it isn't always comfortable, especially
+in a laptop. p53-fan can start the fans spinning at lower temperatures.
+Alternatively, it can keep the fans quiet even at relatively high temperatures,
+if you prefer that.
+
+Whatever fan curve is selected, p53-fan won't allow the temperature to exceed 75C
+without setting the fan speed to maximum. It won't switch the fan on at all
+until the temperature exceeds 45C.
+
+With light workloads, cooling behaviour will likely be dominated by the wifi adapter. 
+In the P53 (and probably others) the Wifi adapter isn't in the main cooling air path,
+and its temperature changes only a little with fan speed.
+
+.SH OPTIONS
+
+.TP
+.BI \-c,\-\-curve " CURVE"
+Set the fan response curve: 'cold', 'cool', 'medium', 'warm', 'hot'.
+
+.TP
+.BI \-d,\-\-dry-run 
+Don't attempt to change the fan speed. This mode can be used by an unprivileged 
+user, most likely in combination with debug-level logging.
+
+.TP
+.BI \-f,\-\-foreground
+Run in the foreground, and log messages to standard out.
+
+.TP
+.B \-h
+Show a short help message
+
+.TP
+.BI \-i " INTERVAL"
+Interval between temperature polls in seconds (default: 5).
+
+.TP
+.BI \-l,\-\-log-level " LOGLEVEL"
+Set the log level from 0 (errors only) to 4 (very verbose). In background mode,
+log output goes to the system logger, not to standard out.
+
+.TP
+.BI \-\-no-drivetemp
+Do not include temperatures from the drivetemp module, which can be problematic
+on some systems (see below). 
+
+.TP
+.B \-s
+Stop an existing instance of p53-fan, if one is running.
+
+.TP
+.B \-v
+Show the version and copyright information.
+
+.TP
+.BI \-\-no-wifi
+Do not include the temperature of the wifi adapter. Thinkpad wifi adapters tend
+to run quite warm, because they aren't easily cooled by the main fans. Including
+the wifi adapter temperature (which is the default) will increase the
+fan speed quite a lot, for a relatively small cooling effect on the wifi
+adapter. Using this option will reduce fan speed without a significant increase
+in CPU/GPU temperature, but the wifi adapter will run a little warmer under light load.
+
+.SH NOTES
+
+To use non-default fan control on Thinkpad devices at all, the \fIthinkpad_acpi\fR
+kernel module must be loaded with the option \fIfan-control=1\fR. 
+
+The 'warm' fan curve is broadly similar to the default cooling behaviour.
+
+p53-fan creates a lock file \fI/tmp/p53-fan.lck\fR, to assist in preventing
+multiple instances being started accidentally. The lock file should be deleted
+automatically when p53-fan shuts down.
+
+p53-fan tries to set the fan to 'disengaged' at aggregate temperatures of
+75C or higher. This mode of operation allows the fans to run much faster,
+but without speed control. Not all Lenovo laptops support this mode of
+operation, and the fan control might revert to default operation at
+very high temperatures.
+
+When the program terminates, it attempts to set the fan behaviour back to
+default. 
+
+In almost all installations, p53-fan will need to run as root. However, it has
+a 'dry-run' mode that an unprivileged user can use for testing. In
+this mode, enabling debug logging allows p53-fan to report its temperature
+readings, and display the changes it would make to the fan speed. 
+
+The drivetemp kernel module reads SMART statistics from certain drives, and
+makes their temperatures available via hwmon. If you want p53-fan to monitor
+the temperatures of SATA drives, you'll need to load the drivetemp module (not
+always the default), and avoid this option. NVME drives have their own
+temperature monitoring, so they don't need drivetemp.  The difficulty with
+drivetemp is that it might include information from external drives which are,
+of course, not subject to cooling by a computer's built-in fans.  In addition,
+some drives get woken from sleep when their temperature is polled, which will
+increase their energy consumption. 
+
