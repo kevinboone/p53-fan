@@ -1,0 +1,48 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          p53-fan
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: p53-fan initscript
+# Description:       starts p53-fan
+### END INIT INFO
+
+FAN_CURVE=cool ## Set to taste
+LOG_LEVEL=1 ## Errors and warnings
+
+do_start()
+{
+  
+  /sbin/p53-fan --curve $FAN_CURVE --log-level $LOG_LEVEL 
+}
+
+do_stop()
+{
+  /sbin/p53-fan --stop
+}
+
+case "$1" in
+  start)
+	do_start
+	;;
+  stop)
+	do_stop
+	;;
+  status)
+        if [ -f /tmp/p53-fan.lck ] ; then
+          echo "Running"
+          exit 0
+        else
+          echo "Stopped"
+          exit 1
+        fi
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|status}" >&2
+	exit 3
+	;;
+esac
+
+:
