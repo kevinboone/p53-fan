@@ -12,13 +12,17 @@ interface, located at `/proc/acpi/ibm/fan`, and temperature monitors in the
 `hwmon` subsystem. I intended `p53-fan` to be a simpler, smaller alternative
 to the `thinkfan` utility, although it works in a similar way.
 
-By `opinionated` I mean that `p53-fan` is essentially a zero-configuration
+By 'opinionated' I mean that `p53-fan` is essentially a zero-configuration
 utility: it doesn't require a configuration file like `thinkfan` does. Instead
 it just makes certain assumptions about which temperature sensors are relevant
 for fan control. Please see the more detailed description below, concerning the
 choice of sensors -- these won't be suitable for everyone. `thinkfan` is highly
 configurable, and likely to be more suitable than `p53-fan` for unconventional
 configurations. 
+
+`p53-fan` probably won't play nicely with other fan-control software, but it 
+can run alongside `p53-cputemp`, which regulates CPU scaling based on temperature.
+In fact, I wrote these two utilities to work together.
 
 ## Features
 
@@ -191,7 +195,7 @@ cooling behaviour.
 ### 'disengaged' mode
 
 At high temperatures, cooling works most effectively with the fan
-'disengaged. That is, with no speed regulation. Turning off speed 
+'disengaged', that is, with no speed regulation. Turning off speed 
 regulation allows the fan to run as much as 25% faster, albeit not
 at a controlled speed. 
 
@@ -232,7 +236,7 @@ sure. The ones I've tried don't get included and, again, they shouldn't be:
 it doesn't matter how fast a laptop's fans spin, they aren't going
 to cool an external drive. 
 
-Linux installations don't usually load `drivetemp` by default. It can be a
+Linux installations don't usually load `drivetemp` by default, as it can be a
 little problematic. A particular problem is that some drives get woken from a
 sleep state when their temperature is read. This isn't a problem for
 `drivetemp` in particular: it happens with other software, too. However,
@@ -269,7 +273,7 @@ by ten Celsius. Problems like this aren't all that uncommon.
 
 `p53-fan` only reads temperatures from the hwmon subsystem. It can't use SMART
 directly on SATA drives (although it can use `drivetemp` to get the same effect)
-an it can't use proprietary APIs to read the temperature of a GPU (but it
+and it can't use proprietary APIs to read the temperature of a GPU (but it
 can read the GPU temperature from `thinkpad_acpi` for some hardware).
 
 I wrote `p53-fan` for my own purposes, and I consider it feature-complete. 
